@@ -6,6 +6,7 @@ import * as Notifications from "../elements/notifications";
 import { checkIfGetParameterExists } from "../utils/misc";
 import * as UserReportPopup from "../popups/user-report-popup";
 import * as Skeleton from "../popups/skeleton";
+import * as ContributionGraph from "../account/contribution-activity-graph";
 
 function reset(): void {
   $(".page.pageProfile .preloader").removeClass("hidden");
@@ -146,7 +147,74 @@ function reset(): void {
             <div class="acc">-</div>
           </div>
         </div>
-      </div><div class="lbOptOutReminder hidden"></div>`);
+      </div><div class="lbOptOutReminder hidden"></div>
+      <div class="contribution-activity">
+        <div class="header">
+          <div class="title">Typing Contribution Activity</div>
+          <div class="group1">
+            <span class="value">-</span>
+            <p>contributions in</p>
+            <span class="year">last year</span>
+          </div>
+          <div class="group2">
+            <div class="total-active">
+              <p>total active days:</p>
+              <span class="days">-</span>
+            </div>
+            <div class="max-streak">
+              <p>max streak:</p>
+              <span class="days">-</span>
+              <p>days</p>
+            </div>
+            <div class="year-dropdown">
+              <div class="selected">
+                2023
+                <i class="fas fa-chevron-down"></i>
+              </div>
+              <div class="list hidden">
+                <!-- <span class="2023 active">
+                  2023
+                  <i class="fas fa-solid fa-check"></i>
+                </span> -->
+                <!-- <span class="2022">2022</span>
+                <span class="2021">2021</span>
+                <span class="2020">2020</span> -->
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="contribution-graph">
+          <div class="calendar">
+            <table class="weeks">
+              <tr>
+                <th>Mon</th>
+              </tr>
+              <tr>
+                <td></td>
+              </tr>
+              <tr>
+                <th>Wed</th>
+              </tr>
+              <tr>
+                <td></td>
+              </tr>
+              <tr>
+                <th>Fri</th>
+              </tr>
+              <tr>
+                <td></td>
+              </tr>
+              <tr>
+                <th>Sun</th>
+              </tr>
+              <tr>
+                <td></td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </div>
+      `);
 }
 
 interface UpdateOptions {
@@ -160,6 +228,7 @@ async function update(options: UpdateOptions): Promise<void> {
     $(".page.pageProfile .preloader").addClass("hidden");
     Profile.update("profile", options.data);
     PbTables.update(options.data.personalBests, true);
+    ContributionGraph.update(options.data, true);
   } else if (options.uidOrName) {
     const response =
       getParamExists === true
@@ -187,6 +256,7 @@ async function update(options: UpdateOptions): Promise<void> {
 
     Profile.update("profile", response.data);
     PbTables.update(response.data.personalBests, true);
+    ContributionGraph.update(response.data, true);
   } else {
     Notifications.add("Missing update parameter!", -1);
   }

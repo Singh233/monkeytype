@@ -1,3 +1,7 @@
+@function rgbHack($args...) {
+  @return r#{g}#{b }(#{$args});
+}
+
 .pageProfileSearch {
   align-content: center;
   height: 100%;
@@ -72,7 +76,8 @@
   grid-template-areas:
     "info info"
     "leaderboards leaderboards"
-    "pbsTime pbsWords";
+    "pbsTime pbsWords"
+    "contribution-activity contribution-activity";
 
   .pbsWords {
     grid-area: pbsWords;
@@ -89,7 +94,8 @@
   .pbsWords,
   .pbsTime,
   .details,
-  .leaderboardsPositions {
+  .leaderboardsPositions,
+  .contribution-activity {
     // user-select: none;
     background: var(--sub-alt-color);
     padding: 1rem;
@@ -161,6 +167,208 @@
       }
       &.t60 {
         grid-area: t60;
+      }
+    }
+  }
+
+  .contribution-activity {
+    grid-area: contribution-activity;
+    display: flex;
+    flex-direction: column;
+    justify-items: center;
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      .title {
+        color: var(--sub-color);
+      }
+
+      .group1,
+      .group2 {
+        display: flex;
+        align-items: center;
+        color: var(--sub-color);
+
+        .value {
+          font-size: 1.5rem;
+          color: var(--text-color);
+        }
+      }
+
+      .group1 {
+        span {
+          margin: 0 5px;
+        }
+      }
+
+      .group2 {
+        div {
+          display: flex;
+          align-items: center;
+        }
+        span {
+          margin: 0 3px;
+        }
+        .total-active {
+          margin-left: 10px;
+          font-size: 0.8rem;
+
+          .days {
+            color: var(--text-color);
+          }
+        }
+
+        .max-streak {
+          margin-left: 20px;
+          font-size: 0.8rem;
+
+          .days {
+            color: var(--text-color);
+          }
+        }
+
+        .year-dropdown {
+          margin-left: 10px;
+
+          color: var(--bg-color);
+          position: relative;
+
+          .selected {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: background 0.125s, color 0.125s;
+            padding: 0.5em;
+            background-color: var(--main-color);
+            border-radius: var(--roundness);
+            &:hover {
+              background-color: var(--text-color);
+            }
+            i {
+              margin-left: 5px;
+            }
+          }
+
+          .list {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            top: 100%;
+            background: black;
+            z-index: 1;
+            width: 100%;
+            left: 0;
+            padding: 0.5em;
+            margin-top: 5px;
+            border-radius: var(--roundness);
+
+            span {
+              display: flex;
+              align-items: center;
+              transition: background 0.125s, color 0.125s;
+
+              margin: 3px;
+              margin-right: 6px;
+              cursor: pointer;
+              color: var(--sub-color);
+
+              &:hover {
+                color: var(--main-color);
+              }
+
+              i {
+                color: var(--main-color);
+                position: absolute;
+                right: 5px;
+                font-size: 0.8rem;
+              }
+            }
+
+            .active {
+              color: var(--main-color);
+            }
+          }
+
+          .hidden {
+            display: none;
+          }
+        }
+      }
+    }
+
+    .calendar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      table {
+        border-spacing: 2px;
+        border-collapse: separate;
+        td {
+          padding: 0px;
+          height: 11px;
+          width: 11px;
+
+          span {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            word-wrap: normal;
+            border: 0;
+          }
+        }
+
+        .month {
+          color: var(--sub-color);
+          font-size: 0.9em;
+          padding-top: 3px;
+        }
+
+        .calendar-day {
+          background-color: var(--bg-color);
+          border-radius: 2.5px;
+          // border: 0.5px solid var(--bg-color);
+
+          // &:hover {
+          //   border-color: var(--text-color);
+          // }
+        }
+
+        .calendar-day[data-level="0"] {
+          background-color: var(--bg-color);
+        }
+        .calendar-day[data-level="1"] {
+          background-color: var(--bg-color);
+        }
+        .calendar-day[data-level="2"] {
+          background-color: var(--bg-color);
+        }
+        .calendar-day[data-level="3"] {
+          background-color: var(--bg-color);
+        }
+        .calendar-day[data-level="4"] {
+          background-color: var(--main-color);
+        }
+
+        .joiningDay {
+          background-color: var(--main-color);
+        }
+      }
+      .weeks {
+        border-collapse: collapse;
+        margin-right: 5px;
+
+        th {
+          padding: 0px;
+          font-size: 0.7em;
+          color: var(--sub-color);
+        }
       }
     }
   }

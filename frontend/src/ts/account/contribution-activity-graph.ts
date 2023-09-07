@@ -1,11 +1,20 @@
 import { format } from "date-fns";
 import { ProfileData } from "../elements/profile";
 import { lightenColor, parseColor } from "../utils/color-manipulation";
+import { showConfetti } from "../test/result";
+
+interface ContributionDetails {
+  [year: string]: {
+    [date: string]: number;
+  };
+}
 
 let joiningDate = 0;
 let calendar = $(".calendar") as JQuery<HTMLElement>;
 let yearDropdown = $(".year-dropdown");
 let previousSelectedYear = new Date().getFullYear();
+let contributionDetails: ContributionDetails = {};
+let maxStreak = 0;
 
 const yearDropdownClick = (): void => {
   yearDropdown.find(".list").toggleClass("hidden");
@@ -23,16 +32,35 @@ const yearClick = (event: JQuery.ClickEvent): void => {
 
     updateYearDropdown(parseInt(year, 10));
     clearCalendar();
-    updateCalendarHeader(parseInt(year, 10), 0, 0, 0);
+    updateCalendarHeader(
+      parseInt(year, 10),
+      contributionDetails["totalContributions"]?.["value"] ?? 0,
+      contributionDetails[year]?.["totalContributions"] ?? 0,
+      contributionDetails[year]?.["activeDays"] ?? 0,
+      contributionDetails["totalActiveDays"]?.["value"] ?? 0,
+      maxStreak
+    );
 
     for (let i = 1; i <= 12; i++) {
       createCalendar(calendar, parseInt(year, 10), i, joiningDate);
     }
+    calendar.find(".joiningDay").off({
+      mouseover: easterEgg,
+      click: easterEgg,
+    });
+    calendar.find(".joiningDay").on({
+      mouseover: easterEgg,
+      click: easterEgg,
+    });
 
     previousSelectedYear = parseInt(year);
     return;
   }
   event.stopPropagation();
+};
+
+const easterEgg = (event: JQuery.ClickEvent): void => {
+  showConfetti();
 };
 
 function clearCalendar(): void {
@@ -141,15 +169,27 @@ function createCalendar(
 
     const bgColor = yearDropdown.find(".selected").css("background-color");
 
-    let balloonText = `- contribution on ${
-      months[month]
-    }  ${date.getDate()}, ${year}`;
+    const contributionYear = contributionDetails[date.getFullYear()];
+    const contributionDayAndMonth = `${
+      date.getDate() > 10 ? date.getDate() : `0${date.getDate()}`
+    } ${months[month]}`;
+
+    const contributionCount = contributionYear?.[contributionDayAndMonth] ?? 0;
+    const contributionLevel = isJoiningDate
+      ? 4
+      : Math.ceil(contributionCount / 4);
+
+    let balloonText = `${contributionCount} contribution${
+      contributionCount > 1 || contributionCount === 0 ? "s" : ""
+    } on ${months[month]}  ${date.getDate()}, ${year}`;
+
     if (isJoiningDate) {
       balloonText = `Joined ${
         months[month]
-      }  ${date.getDate()}, ${year} \n - contribution`;
+      }  ${date.getDate()}, ${year} \n ${contributionCount} contribution${
+        contributionCount > 1 || contributionCount === 0 ? "s" : ""
+      }`;
     }
-    const contributionLevel = isJoiningDate ? 4 : 0;
 
     // Parse the color value
     const color = parseColor(bgColor);
@@ -194,20 +234,52 @@ function getDay(date: Date): number {
 
 function updateCalendarHeader(
   year: number,
-  contributionValue: number,
-  totalActiveDays: number,
-  maxStreak: number
+  totalContributions = 0,
+  contributionYearly = 0,
+  activeDays = 0,
+  totalActiveDays = 0,
+  maxStreak = 0
 ): void {
-  const contributionActivityHeader = $(".contribution-activity").find(
-    ".header"
-  );
-  contributionActivityHeader.find(".group1 .value").text(contributionValue);
+  const contributionActivityHeader = calendar.parent().parent().find(".header");
+
+  contributionActivityHeader
+    .find(".title")
+    .attr(
+      "aria-label",
+      `Total contribution${
+        totalContributions > 1 || totalContributions === 0 ? "s" : ""
+      } - ${totalContributions}`
+    );
+  contributionActivityHeader.find(".group1 .value").text(contributionYearly);
+  contributionActivityHeader
+    .find(".group1 p")
+    .text(
+      contributionYearly > 1 || contributionYearly === 0
+        ? "contributions in"
+        : "contribution in"
+    );
   contributionActivityHeader.find(".group1 .year").text(year);
 
   contributionActivityHeader
     .find(".group2 .total-active .days")
-    .text(totalActiveDays);
-  contributionActivityHeader.find(".group2 .max-streak .days").text(maxStreak);
+    .text(activeDays);
+  contributionActivityHeader
+    .find(".group2 .total-active")
+    .attr(
+      "aria-label",
+      `Total active day${
+        totalActiveDays > 1 || totalActiveDays === 0 ? "s" : ""
+      } - ${totalActiveDays}`
+    );
+  contributionActivityHeader
+    .find(".group2 .max-streak .days")
+    .text(
+      `${
+        maxStreak > 1 || maxStreak === 0
+          ? `${maxStreak} days`
+          : `${maxStreak} day`
+      }`
+    );
 }
 
 function updateYearDropdown(year: number): void {
@@ -221,12 +293,17 @@ function updateYearDropdown(year: number): void {
 }
 
 export function update(
-  snapshot: Partial<ProfileData> | null,
+  profile: Partial<ProfileData> | null,
   isProfile: boolean
 ): void {
+  maxStreak = profile?.maxStreak ?? 0;
   // unbind previous click event
   yearDropdown.off("click", yearDropdownClick);
   yearDropdown.find(".list").off("click", yearClick);
+  calendar.find(".joiningDay").off({
+    mouseover: easterEgg,
+    click: easterEgg,
+  });
 
   const source = isProfile ? "Profile" : "Account";
   calendar = $(`.page${source} .profile .calendar`);
@@ -236,11 +313,12 @@ export function update(
   // Clear previous calendar if any
   clearCalendar();
 
+  evaluateContributions(profile);
+
   // bind events again
   yearDropdown.on("click", yearDropdownClick);
   yearDropdown.find(".list").on("click", yearClick);
 
-  const profile = snapshot;
   const joiningYear = profile
     ? parseInt(format(profile?.addedAt ?? 0, "yyyy"), 10)
     : 2021;
@@ -256,9 +334,71 @@ export function update(
   }
 
   updateYearDropdown(previousSelectedYear);
-  updateCalendarHeader(previousSelectedYear, 0, 0, 0);
+  updateCalendarHeader(
+    previousSelectedYear,
+    contributionDetails["totalContributions"]?.["value"] ?? 0,
+    contributionDetails[previousSelectedYear]?.["totalContributions"] ?? 0,
+    contributionDetails[previousSelectedYear]?.["activeDays"] ?? 0,
+    contributionDetails["totalActiveDays"]?.["value"] ?? 0,
+    profile?.maxStreak
+  );
 
   for (let i = 1; i <= 12; i++) {
     createCalendar(calendar, previousSelectedYear, i, joiningDate);
   }
+  calendar.find(".joiningDay").on({
+    mouseover: easterEgg,
+    click: easterEgg,
+  });
+}
+
+function evaluateContributions(profile: Partial<ProfileData> | null): void {
+  if (!profile?.results) {
+    return;
+  }
+
+  // Create an object to store contributions by year
+  contributionDetails = {
+    totalContributions: { value: 0 },
+    totalActiveDays: { value: 0 },
+  };
+
+  // Iterate through contributions and count them by date
+  for (const contribution of profile.results) {
+    const date = new Date(contribution.timestamp);
+    const dayAndMonth = format(date, "dd MMM");
+    const year = format(date, "yyyy");
+
+    // Initialize the year if it doesn't exist in contributionDetails
+    if (!contributionDetails[year]) {
+      contributionDetails[year] = {};
+    }
+
+    // Initialize the dayAndMonth if it doesn't exist in the year
+    if (!contributionDetails[year][dayAndMonth]) {
+      contributionDetails[year][dayAndMonth] = 0;
+    }
+
+    // Initialize the totalContributions if it doesn't exist in the year
+    if (!contributionDetails[year]["totalContributions"]) {
+      contributionDetails[year]["totalContributions"] = 0;
+    }
+
+    // Increment contributions for the specific day and month
+    contributionDetails[year][dayAndMonth]++;
+
+    // Increment totalContributions
+    contributionDetails["totalContributions"]["value"]++;
+
+    // Increment totalContributions of a particular year
+    contributionDetails[year]["totalContributions"]++;
+  }
+
+  // Calculate totalActiveDays and activeDays for each year
+  Object.entries(contributionDetails).forEach(([key, value]) => {
+    if (key === "totalActiveDays" || key === "totalContributions") return;
+    const length = Object.keys(value).length;
+    contributionDetails["totalActiveDays"]["value"] += length - 1;
+    contributionDetails[key]["activeDays"] = length - 1;
+  });
 }

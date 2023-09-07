@@ -1,5 +1,6 @@
 import _ from "lodash";
 import * as UserDAL from "../../dal/user";
+import * as ResultsDAL from "../../dal/result";
 import MonkeyError from "../../utils/error";
 import Logger from "../../utils/logger";
 import { MonkeyResponse } from "../../utils/monkey-response";
@@ -676,6 +677,8 @@ export async function getProfile(
       ? await UserDAL.getUser(uidOrName, "get user profile")
       : await UserDAL.getUserByName(uidOrName, "get user profile");
 
+  const results = await ResultsDAL.getResults(user.uid);
+
   const {
     name,
     banned,
@@ -712,6 +715,7 @@ export async function getProfile(
     banned,
     addedAt,
     typingStats,
+    results,
     personalBests: relevantPersonalBests,
     discordId,
     discordAvatar,

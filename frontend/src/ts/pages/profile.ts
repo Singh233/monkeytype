@@ -150,21 +150,30 @@ function reset(): void {
       </div><div class="lbOptOutReminder hidden"></div>
       <div class="contribution-activity">
         <div class="header">
-          <div class="title">Typing Contribution Activity</div>
-          <div class="group1">
-            <span class="value">-</span>
-            <p>contributions in</p>
-            <span class="year">last year</span>
-          </div>
-          <div class="group2">
-            <div class="total-active">
-              <p>total active days:</p>
+            <div
+              aria-label="Total contributions - "
+              data-balloon-pos="up"
+              class="title"
+            >
+              Typing Contribution Activity
+            </div>
+            <div class="group1">
+              <span class="value">-</span>
+              <p>contributions in</p>
+              <span class="year">last year</span>
+            </div>
+            <div class="group2">
+              <div
+                aria-label="Total active days - "
+                data-balloon-pos="up"
+                class="total-active"
+              >
+              <p>active days:</p>
               <span class="days">-</span>
             </div>
             <div class="max-streak">
               <p>max streak:</p>
-              <span class="days">-</span>
-              <p>days</p>
+              <span class="days">- days</span>
             </div>
             <div class="year-dropdown">
               <div class="selected">

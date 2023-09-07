@@ -185,6 +185,7 @@ declare namespace MonkeyTypes {
     favoriteQuotes?: Record<string, string[]>;
     needsToChangeName?: boolean;
     discordAvatar?: string;
+    results?: MonkeyTypesResult[];
     resultFilterPresets?: ResultFilters[];
     profileDetails?: UserProfileDetails;
     inventory?: UserInventory;

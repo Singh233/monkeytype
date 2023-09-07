@@ -182,6 +182,7 @@
       justify-content: space-between;
       .title {
         color: var(--sub-color);
+        cursor: default;
       }
 
       .group1,
@@ -191,7 +192,7 @@
         color: var(--sub-color);
 
         .value {
-          font-size: 1.5rem;
+          font-size: 1em;
           color: var(--text-color);
         }
       }
@@ -213,6 +214,7 @@
         .total-active {
           margin-left: 10px;
           font-size: 0.8rem;
+          cursor: default;
 
           .days {
             color: var(--text-color);
@@ -333,6 +335,7 @@
         .calendar-day {
           background-color: var(--bg-color);
           border-radius: 2.5px;
+          cursor: default;
           // border: 0.5px solid var(--bg-color);
 
           // &:hover {
@@ -358,6 +361,7 @@
 
         .joiningDay {
           background-color: var(--main-color);
+          cursor: pointer;
         }
       }
       .weeks {

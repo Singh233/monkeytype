@@ -9,17 +9,78 @@ interface ContributionDetails {
   };
 }
 
+interface BalloonZones {
+  [zone: string]: string;
+}
+
 let joiningDate = 0;
 let calendar = $(".calendar") as JQuery<HTMLElement>;
 let yearDropdown = $(".year-dropdown");
 let previousSelectedYear = new Date().getFullYear();
 let contributionDetails: ContributionDetails = {};
 let maxStreak = 0;
+const balloonZones: BalloonZones = {
+  1: "up-left",
+  2: "down-left",
+  3: "down",
+  4: "down-right",
+  5: "up-right",
+  6: "up",
+};
 
-const yearDropdownClick = (): void => {
+const calendarMouseOutCallback = (event: JQuery.ClickEvent): void => {
+  if (
+    event.target.tagName === "TD" &&
+    $(event.target).attr("data-balloon-pos") !== undefined
+  ) {
+    const calendarDay = $(event.target);
+    calendarDay.removeAttr("data-balloon-pos");
+  }
+};
+
+const calendarMouseOverCallback = (event: JQuery.ClickEvent): void => {
+  if (
+    event.target.tagName === "TD" &&
+    $(event.target).attr("data-balloon-zone") !== undefined
+  ) {
+    const x = event.target.getBoundingClientRect().x;
+    const calendarDay = $(event.target);
+    const zone = calendarDay.attr("data-balloon-zone") ?? "6";
+    // Right offset
+    if (x + 250 >= window.innerWidth) {
+      calendarDay.attr(
+        "data-balloon-pos",
+        parseInt(zone) >= 5 ? balloonZones[5] : balloonZones[4]
+      );
+    } else if (x - 250 <= 0) {
+      // Left offset
+      calendarDay.attr(
+        "data-balloon-pos",
+        parseInt(zone) === 1 || parseInt(zone) === 6
+          ? balloonZones[1]
+          : balloonZones[2]
+      );
+    } else {
+      calendarDay.attr("data-balloon-pos", balloonZones[zone]);
+    }
+
+    let label = calendarDay.attr("aria-label");
+    if (window.innerWidth <= 600) {
+      label = label?.replace("contributions", "tests");
+      label = label?.replace("contribution", "test");
+    } else {
+      label = label?.replace("tests", "contributions");
+      label = label?.replace("test", "contribution");
+    }
+    calendarDay.attr("aria-label", label ?? "Something went wrong!");
+  }
+};
+
+const yearDropdownClickCallback = (): void => {
   yearDropdown.find(".list").toggleClass("hidden");
 };
-const yearClick = (event: JQuery.ClickEvent): void => {
+
+const yearClickCallback = (event: JQuery.ClickEvent): void => {
   if (event.target.tagName === "SPAN") {
     const year = event.target.innerText;
     // First Remove check icon and active class from last selected year
@@ -48,10 +109,9 @@ const yearClick = (event: JQuery.ClickEvent): void => {
       mouseover: easterEgg,
       click: easterEgg,
     });
-    calendar.find(".joiningDay").on({
-      mouseover: easterEgg,
-      click: easterEgg,
-    });
+
+    removeCalendarEvents();
+    addCalendarEvents();
 
     previousSelectedYear = parseInt(year);
     return;
@@ -108,7 +168,8 @@ function createCalendar(
   element: JQuery<HTMLElement>,
   year: number,
   month: number,
-  joiningDate = 0
+  joiningDate = 0,
+  isPreload = false
 ): void {
   if (!element) return;
   month = month - 1; // months in JS are 0..11, not 1..12
@@ -159,9 +220,20 @@ function createCalendar(
   // <td> with actual dates
   while (date.getMonth() == month) {
     const day = getDay(date);
-    const isJanuary = date.getMonth() === 0;
-    const isDecember = date.getMonth() === 11;
-    const balloonPosition = isJanuary ? "right" : isDecember ? "left" : "up";
+    if (isPreload) {
+      const td = `<td class='calendar-day' data-level='0'></td>`;
+      week[days[day]] += td;
+      date.setDate(date.getDate() + 1);
+      continue;
+    }
+    const balloonLeftOffset = date.getMonth() === 0 || date.getMonth() === 1;
+    const balloonRightOffset = date.getMonth() === 11 || date.getMonth() === 10;
+    const balloonTopOffset = day <= 1;
+    const balloonZone = balloonLeftOffset
+      ? `${balloonTopOffset ? 2 : 1}`
+      : balloonRightOffset
+      ? `${balloonTopOffset ? 4 : 5}`
+      : `${balloonTopOffset ? 3 : 6}`;
     const isJoiningDate =
       date.getMonth() === joinedIn.getMonth() &&
       date.getDate() === joinedIn.getDate() &&
@@ -204,9 +276,9 @@ function createCalendar(
 
     const td = `<td aria-label='${balloonText}' ${
       isJoiningDate ? `data-balloon-length='large' data-balloon-break` : ""
-    } data-balloon-pos='${balloonPosition}' class='${
+    }  class='${
       isJoiningDate ? "joiningDay" : ""
-    } calendar-day' data-level='${contributionLevel}' ${
+    } calendar-day' data-balloon-zone='${balloonZone}' data-level='${contributionLevel}' ${
       contributionLevel !== 0 ? `style='background-color: ${rgba}'` : ""
     }  ></td>`;
 
@@ -297,31 +369,30 @@ export function update(
   isProfile: boolean
 ): void {
   maxStreak = profile?.maxStreak ?? 0;
-  // unbind previous click event
-  yearDropdown.off("click", yearDropdownClick);
-  yearDropdown.find(".list").off("click", yearClick);
-  calendar.find(".joiningDay").off({
-    mouseover: easterEgg,
-    click: easterEgg,
-  });
+  // unbind previous click event because there are two seperate pages one for profile and another for account
+  // and both have same class names
+  yearDropdown.off("click", yearDropdownClickCallback);
+  yearDropdown.find(".list").off("click", yearClickCallback);
+  removeCalendarEvents();
 
   const source = isProfile ? "Profile" : "Account";
   calendar = $(`.page${source} .profile .calendar`);
   yearDropdown = $(`.page${source} .profile .year-dropdown`);
   const currentYear = new Date().getFullYear();
   previousSelectedYear = currentYear;
+
   // Clear previous calendar if any
   clearCalendar();
 
   evaluateContributions(profile);
 
   // bind events again
-  yearDropdown.on("click", yearDropdownClick);
-  yearDropdown.find(".list").on("click", yearClick);
+  yearDropdown.on("click", yearDropdownClickCallback);
+  yearDropdown.find(".list").on("click", yearClickCallback);
 
   const joiningYear = profile
     ? parseInt(format(profile?.addedAt ?? 0, "yyyy"), 10)
-    : 2021;
+    : 2020;
 
   joiningDate = profile?.addedAt ?? 0;
 
@@ -344,12 +415,11 @@ export function update(
   );
 
   for (let i = 1; i <= 12; i++) {
+    // per month
     createCalendar(calendar, previousSelectedYear, i, joiningDate);
   }
-  calendar.find(".joiningDay").on({
-    mouseover: easterEgg,
-    click: easterEgg,
-  });
+
+  addCalendarEvents();
 }
 
 function evaluateContributions(profile: Partial<ProfileData> | null): void {
@@ -402,3 +472,38 @@ function evaluateContributions(profile: Partial<ProfileData> | null): void {
     contributionDetails[key]["activeDays"] = length - 1;
   });
 }
+
+export const preloadCalendar = (): void => {
+  for (let month = 1; month <= 12; month++) {
+    createCalendar(
+      $(`.pageProfile .profile .calendar`),
+      new Date().getFullYear(),
+      month,
+      0,
+      true
+    );
+  }
+};
+
+const addCalendarEvents = (): void => {
+  calendar.find(".joiningDay").on({
+    mouseover: easterEgg,
+    click: easterEgg,
+  });
+
+  calendar.on({
+    mouseover: calendarMouseOverCallback,
+    mouseout: calendarMouseOutCallback,
+  });
+};
+
+const removeCalendarEvents = (): void => {
+  calendar.find(".joiningDay").off({
+    mouseover: easterEgg,
+    click: easterEgg,
+  });
+  calendar.off({
+    mouseover: calendarMouseOverCallback,
+    mouseout: calendarMouseOutCallback,
+  });
+};

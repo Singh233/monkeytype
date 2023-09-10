@@ -79,6 +79,18 @@
   .pageSettings .section.fullWidth .buttons {
     grid-template-columns: 1fr 1fr 1fr;
   }
+
+  .profile .contribution-activity {
+    .header {
+      .title {
+        font-size: 0.9em;
+      }
+
+      .group1 {
+        font-size: 0.8em;
+      }
+    }
+  }
   // .pageSettings .section.themes .buttons {
   //   grid-template-columns: 1fr 1fr;
   // }
@@ -172,6 +184,11 @@
     grid-auto-flow: unset;
     justify-items: center;
   }
+
+  .contribution-activity .calendar {
+    justify-content: flex-start !important;
+    padding: 0 1em;
+  }
 }
 
 //900px
@@ -223,7 +240,8 @@
       "info"
       "leaderboards"
       "pbsTime"
-      "pbsWords";
+      "pbsWords"
+      "contribution-activity contribution-activity";
     .details .bioAndKeyboard {
       height: 100%; //dumb safari fix
     }
@@ -277,6 +295,52 @@
     }
     .leaderboardsPositions {
       grid-template-areas: "title title" "t15 t60";
+    }
+
+    .contribution-activity {
+      .header {
+        display: grid;
+        grid-template-areas: "title title" "group1 group2";
+
+        .title {
+          font-size: 1em;
+          grid-area: title;
+          justify-self: center;
+          padding: 0.5em;
+        }
+
+        .group1 {
+          font-size: 0.8em;
+          grid-area: group1;
+        }
+
+        .group2 {
+          font-size: 0.8em;
+          grid-area: group2;
+
+          .year-dropdown {
+            .selected {
+              padding: 0.5em 0.8em;
+            }
+
+            .list {
+              span {
+                margin-right: 8px;
+              }
+
+              i {
+                right: 6px;
+              }
+            }
+          }
+        }
+      }
+
+      .calendar {
+        overflow-y: hidden;
+        overflow-x: auto;
+        justify-content: flex-start;
+      }
     }
   }
   #leaderboards {
@@ -535,7 +599,9 @@
       "info"
       "leaderboards"
       "pbsTime"
-      "pbsWords";
+      "pbsWords"
+      "contribution-activity";
+
     .details.none {
       grid-template-areas:
         "avAndName"
@@ -603,6 +669,53 @@
         .value {
           grid-auto-flow: column;
         }
+      }
+    }
+
+    .contribution-activity {
+      .header {
+        display: grid;
+        grid-template-areas:
+          "title title" "group2 group2"
+          "group1 group1";
+
+        .title {
+          font-size: 1em;
+          grid-area: title;
+          justify-self: center;
+        }
+
+        .group1 {
+          font-size: 0.8em;
+          grid-area: group1;
+          justify-self: center;
+        }
+
+        .group2 {
+          font-size: 0.8em;
+          grid-area: group2;
+          justify-self: center;
+
+          .year-dropdown {
+            .selected {
+              padding: 0.5em 0.8em;
+            }
+
+            .list {
+              span {
+                margin-right: 8px;
+              }
+
+              i {
+                right: 6px;
+              }
+            }
+          }
+        }
+      }
+
+      .calendar {
+        max-width: 83vw;
       }
     }
   }
@@ -791,6 +904,9 @@
     .leaderboardsPositions {
       grid-template-areas: "title" "t15" "t60";
     }
+
+    .contribution-activity {
+    }
   }
   #cookiePopupWrapper {
     #cookiePopup,
@@ -947,6 +1063,31 @@
       width: 100%;
       .mobileClose {
         display: block;
+      }
+    }
+  }
+}
+
+//425px
+@media only screen and (max-width: 26.563rem) {
+  .profile {
+    .contribution-activity {
+      .header {
+        grid-template-areas:
+          "title title" "group1 group1"
+          "group2 group2";
+
+        .title {
+          grid-area: title;
+        }
+
+        .group1 {
+          grid-area: group1;
+        }
+
+        .group2 {
+          grid-area: group2;
+        }
       }
     }
   }

@@ -288,6 +288,7 @@ export const page = new Page<undefined | Profile.ProfileData>(
   async () => {
     Skeleton.remove("pageProfile");
     reset();
+    ContributionGraph.preloadCalendar();
   },
   async (options) => {
     Skeleton.append("pageProfile", "middle");
@@ -297,6 +298,7 @@ export const page = new Page<undefined | Profile.ProfileData>(
       $(".page.pageProfile .search").addClass("hidden");
       $(".page.pageProfile .content").removeClass("hidden");
       reset();
+      ContributionGraph.preloadCalendar();
       update({
         uidOrName,
         data: options?.data,
